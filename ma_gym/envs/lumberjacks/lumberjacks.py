@@ -151,7 +151,7 @@ class Lumberjacks(gym.Env):
             self._grid_shape[0] + 2 * (self._agent_view[0]),
             self._grid_shape[1] + 2 * (self._agent_view[1]),
         ), dtype=np.int32)
-
+        self._tree_state = []
         for pos, cell in np.ndenumerate(init_positions):
             pos = self._to_extended_coordinates(pos)
             if cell == PRE_IDS['agent']:

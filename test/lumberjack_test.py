@@ -1,7 +1,7 @@
 import sys
 import time
 sys.path.append("../")
-from ma_gym_2.envs.lumberjacks_2.lumberjacks import Lumberjacks
+from ma_gym.envs.lumberjacks.lumberjacks import Lumberjacks
 
 env = Lumberjacks()
 
