@@ -2,7 +2,7 @@ import argparse
 
 import gym
 
-from ma_gym_2.wrappers import Monitor
+from ma_gym.wrappers import Monitor
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Random Agent for ma-gym')
