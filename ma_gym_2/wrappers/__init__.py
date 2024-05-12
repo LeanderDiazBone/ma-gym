@@ -1,0 +1,1 @@
+from ma_gym_2.wrappers.monitor import Monitor

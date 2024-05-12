@@ -76,7 +76,6 @@ class Lumberjacks(gym.Env):
         assert 0 < n_agents
         assert n_agents + n_trees <= np.prod(grid_shape)
         assert 1 <= agent_view[0] <= grid_shape[0] and 1 <= agent_view[1] <= grid_shape[1]
-
         self._grid_shape = grid_shape
         self.n_agents = n_agents
         self._n_trees = n_trees
@@ -97,6 +96,7 @@ class Lumberjacks(gym.Env):
         self.__init_pos = None
         self._agent_map = None
         self._tree_map = None
+        self._tree_state = []
         self._total_episode_reward = None
         self._agent_dones = None
 
@@ -159,7 +159,9 @@ class Lumberjacks(gym.Env):
                 self._agents.append(Agent(agent_id, pos=pos))
                 agent_id += 1
             elif cell == PRE_IDS['tree']:
-                self._tree_map[pos] = self.np_random.randint(1, self.n_agents + 1)
+                strength = self.np_random.randint(1, self.n_agents + 1)
+                self._tree_map[pos] = strength
+                self._tree_state.append((pos, strength))
                 tree_id += 1
 
     def _to_extended_coordinates(self, relative_coordinates):
@@ -251,6 +253,16 @@ class Lumberjacks(gym.Env):
         for (pos, n_a), n_t in zip(agent_iter, tree_iter):
             yield pos, n_a, n_t
 
+    def get_global_obs(self):
+        """Returns global state of environment."""
+        agents_pos = []
+        for i, (agent_id, agent) in enumerate(self._agent_generator()):
+            agents_pos.append(agent.pos)
+        state = []
+        state.append(agents_pos)
+        state.append(self._tree_state)
+        return state
+
     def get_agent_obs(self) -> List[List[float]]:
         """Returns list of observations for each agent."""
         obs = np.zeros((self.n_agents, self._obs_len))
@@ -317,6 +329,12 @@ class Lumberjacks(gym.Env):
         # Cut down trees
         mask = (np.sum(self._agent_map, axis=2) >= self._tree_map) & (self._tree_map > 0)
         self._tree_map[mask] = 0
+        # Update tree state accordingly
+        found_trees = np.array([np.where(mask)[0], np.where(mask)[1]]).T
+        for j in range(len(found_trees)):
+            for i in range(self._n_trees):
+                if self._tree_state[i][0] == tuple(found_trees[j]):
+                    self._tree_state[i] = (self._tree_state[i][0],0)
 
         # Calculate rewards
         rewards += np.sum(mask * self._tree_cutdown_reward, axis=(0, 1))
@@ -359,8 +377,8 @@ class Lumberjacks(gym.Env):
         #                       self._agent_view[1] + self._grid_shape[1] - 1),
         #                      ))
         return (
-            min(max(next_pos[0], self._agent_view[0]), self._grid_shape[0] - 1),
-            min(max(next_pos[1], self._agent_view[1]), self._grid_shape[1] - 1),
+            min(max(next_pos[0], self._agent_view[0]), self._grid_shape[0]),
+            min(max(next_pos[1], self._agent_view[1]), self._grid_shape[1]),
         )
 
     def seed(self, n: Union[None, int] = None):
