@@ -195,7 +195,7 @@ class Lumberjacks(gym.Env):
                 self.np_random.shuffle(init_pos)
                 _shuffle_counter += 1
                 if _shuffle_counter > 10:
-                    logger.warning("Grid configuration same as last episode")
+                    #logger.warning("Grid configuration same as last episode")
                     break
         self.__init_pos = init_pos
         return np.reshape(init_pos, self._grid_shape)
@@ -355,6 +355,18 @@ class Lumberjacks(gym.Env):
         # Add agent to the new position
         agent.pos = next_pos
         self._agent_map[next_pos[0], next_pos[1], agent.id] = 1
+
+    def _is_adjacent(self, pos_1, pos_2):
+        return abs(pos_1[0]-pos_2[0]) < 1 and abs(pos_1[1]-pos_2[1]) < 1
+
+    def _get_connections(self):
+        connections = []
+        for (agent_id_1, agent_1) in self._agent_generator():
+            connections.append([])
+            for (agent_id_2, agent_2) in self._agent_generator():
+                if self._is_adjacent(agent_1.pos, agent_2.pos):
+                    connections[agent_id_1].append(agent_id_2)
+        return connections
 
     def _next_pos(self, curr_pos: Coordinates, move: int) -> Coordinates:
         """Returns next valid position in extended coordinates given by `move` command relative to `curr_pos`."""
